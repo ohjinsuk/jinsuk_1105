@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI PoC 대시보드</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#16202e;--mut:#667085;--line:#e3e8ef;--pri:#2457d6;--pri2:#e8effd;--ok:#12805c;--warn:#b45309;--bad:#c2362b;--shadow:0 1px 3px rgba(16,24,40,.08)}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141c;--card:#18202c;--ink:#e8edf5;--mut:#98a2b3;--line:#283243;--pri:#6b94ff;--pri2:#1e2a45;--ok:#3ccf9a;--warn:#f0a94a;--bad:#ff7b70;--shadow:none}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 48px}
+header{padding:28px 0 8px}
+.tag{display:inline-block;background:var(--pri2);color:var(--pri);font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px}
+h1{margin:8px 0 6px;font-size:26px;line-height:1.35}
+.meta{color:var(--mut);font-size:13px;display:flex;gap:16px;flex-wrap:wrap}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:20px}
+nav a{color:var(--mut);text-decoration:none;font-size:13px;font-weight:600;padding:5px 12px;border-radius:99px}
+nav a:hover{background:var(--pri2);color:var(--pri)}
+section{margin-top:32px;scroll-margin-top:60px}
+h2{font-size:18px;margin:0 0 14px}
+h3{font-size:14px;margin:0 0 8px;color:var(--mut);font-weight:700}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.k .lab{font-size:13px;color:var(--mut)}
+.k .val{font-size:30px;font-weight:800;margin:2px 0}
+.k .sub{font-size:12px;color:var(--mut)}
+.up{color:var(--ok)}.dn{color:var(--bad)}
+ul{margin:0;padding-left:18px}li{margin:4px 0}
+.assume{font-size:11px;color:var(--warn);font-weight:700;margin-left:4px}
+.q{border-left:4px solid var(--pri);background:var(--pri2);padding:12px 16px;border-radius:0 10px 10px 0;font-weight:600}
+.cmp{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:110px 1fr 90px;align-items:center;gap:10px;font-size:13px}
+.bar{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px;width:0;transition:width 1s ease}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.step{flex:1 1 150px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;position:relative}
+.step b{display:block;color:var(--pri);font-size:12px;margin-bottom:2px}
+.step.ai{border-color:var(--pri);background:var(--pri2)}
+.step.hu{border-color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-size:12px}
+.chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:700}
+.c-ok{background:rgba(18,128,92,.14);color:var(--ok)}.c-bad{background:rgba(194,54,43,.14);color:var(--bad)}.c-w{background:rgba(180,83,9,.14);color:var(--warn)}
+.tl{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.ph{border-top:4px solid var(--pri);}
+.ph.b{border-top-color:var(--ok)}
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;counter-reset:r}
+.road div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;counter-increment:r}
+.road div::before{content:counter(r);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--pri);color:#fff;font-weight:800;font-size:12px;margin-bottom:6px}
+.road div.on{border-color:var(--pri);background:var(--pri2)}
+label{font-size:13px;display:block;margin:8px 0 2px;color:var(--mut)}
+input[type=range]{width:100%}
+.big{font-size:28px;font-weight:800;color:var(--pri)}
+.mock{display:grid;gap:10px}
+.mock .mc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mock .mc div{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;font-size:12px}
+.mock .mc b{display:block;font-size:18px}
+footer{margin-top:40px;color:var(--mut);font-size:12px}
+@media(max-width:560px){.row{grid-template-columns:80px 1fr 70px}.tl{grid-template-columns:1fr}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="tag">AI PoC 기획서</span>
+  <h1>생산 실적·불량·비가동 데이터 기반<br>라인 이상 징후 분석 및 일일 리포트(HTML) 자동 생성</h1>
+  <div class="meta"><span>작성자 오진숙</span><span>작성일 2026-11-05</span><span>담당 업무 생산운영</span><span class="assume" style="margin:0">(가정) 표시는 실제 값으로 수정 필요</span></div>
+</header>
+
+<nav>
+  <a href="#kpi">핵심 요약</a><a href="#problem">문제 정의</a><a href="#design">PoC 설계</a><a href="#kpis">성공 지표</a><a href="#schedule">일정</a><a href="#value">비즈니스 가치</a><a href="#output">HTML 산출물</a><a href="#expand">확산 계획</a>
+</nav>
+
+<section id="kpi" style="margin-top:0">
+  <div class="grid g4">
+    <div class="card k"><div class="lab">보고서 작성 시간</div><div class="val">2h → 20분</div><div class="sub">일 기준 · 약 83% 단축 <span class="assume">(가정)</span></div></div>
+    <div class="card k"><div class="lab">원인 분류 일치율 목표</div><div class="val">85%+</div><div class="sub">샘플 50건 담당자 분류와 대조</div></div>
+    <div class="card k"><div class="lab">이상 징후 인지</div><div class="val">D+1 → D+0</div><div class="sub">익일 오전 → 당일 오전</div></div>
+    <div class="card k"><div class="lab">연간 기대 가치</div><div class="val up">약 4,790만원</div><div class="sub">시간 1,190 + 비용 3,600 <span class="assume">(가정)</span></div></div>
+  </div>
+</section>
+
+<section id="problem">
+  <h2>1. 문제 정의</h2>
+  <div class="grid g2">
+    <div class="card"><h3>담당 업무 &amp; 현황</h3>
+      <p style="margin:0 0 8px">생산운영 담당. 일일 생산계획 대비 실적 관리, 라인별 불량·비가동 현황 취합 및 생산 보고 수행.</p>
+      <div class="flow">
+        <div class="step"><b>STEP 1</b>MES/설비 엑셀 다운로드</div>
+        <div class="step"><b>STEP 2</b>수작업 취합·정리</div>
+        <div class="step"><b>STEP 3</b>보고서 작성</div>
+      </div>
+      <p class="assume" style="margin:8px 0 0">실제 프로세스에 맞게 수정 (가정)</p>
+    </div>
+    <div class="card"><h3>핵심 문제 (Pain Point)</h3>
+      <ul>
+        <li>일일/주간 보고용 데이터 취합·정리에 <b>월 약 40시간</b> 소요<span class="assume">(가정)</span></li>
+        <li>계획 대비 실적 미달·비가동 원인을 <b>다음 날에야 파악</b> → 당일 조치 불가</li>
+        <li>담당자마다 원인 분류 기준이 달라 <b>보고 품질 편차</b> 발생</li>
+      </ul>
+    </div>
+    <div class="card"><h3>의사결정 질문</h3>
+      <div class="q">오늘 어느 라인·공정에 먼저 개입해야 하는가? 계획 대비 실적 미달의 주된 원인은 무엇이고, 납기에 미치는 영향은 어느 정도인가?</div>
+    </div>
+    <div class="card"><h3>현재 판단 근거와 한계</h3>
+      <p style="margin:0">담당자 경험과 엑셀 수작업 집계에 의존. 전일 마감 후 사후 확인 방식이라 대응이 늦고, 비가동·불량 사유가 자유 서술이라 반복 패턴을 찾기 어려움.</p>
+      <p style="margin:10px 0 0"><span class="chip c-w">선정 과제</span> 일일 생산 이상 징후 분석 및 리포트 자동화</p>
+    </div>
+  </div>
+</section>
+
+<section id="design">
+  <h2>2. AI PoC 설계</h2>
+  <div class="card" style="margin-bottom:14px"><h3>업무 흐름과 사람 개입 지점</h3>
+    <div class="flow">
+      <div class="step"><b>INPUT</b>전일 생산 데이터 업로드<br>실적·불량·비가동·작업일보</div>
+      <div class="step ai"><b>AI · 집계</b>계획 대비 달성률, 편차 분석, 임계값 규칙</div>
+      <div class="step ai"><b>AI · Claude</b>비가동/불량 사유 요약·분류, 이상 패턴 설명</div>
+      <div class="step hu"><b>사람 검토</b>원인 분류·권고 조치 확정<br>근거 부족 시 "AI 추정 불가"</div>
+      <div class="step"><b>OUTPUT</b>HTML 리포트 배포<br>10분 내 생성</div>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>목표 &amp; 가설</h3>
+      <p style="margin:0 0 6px"><b>목표</b> 전일 생산 데이터만 올리면 라인별 이상 징후와 원인 후보를 10분 내 리포트로 제공.</p>
+      <p style="margin:0"><b>가설</b> Claude 분석으로 보고 시간 <b>70% 이상 절감</b>, 원인 분류를 담당자 판단과 <b>85% 이상 일치</b>.</p></div>
+    <div class="card"><h3>적용 범위</h3>
+      <ul><li>대상: 주력 생산라인 2~3개<span class="assume">(가정)</span></li>
+      <li>최근 3개월 일별 데이터로 사전 검증 후 4주간 일일 적용</li>
+      <li><span class="chip c-bad">제외</span> 설비 실시간 제어, 생산계획 자동 변경</li></ul></div>
+    <div class="card"><h3>활용 데이터</h3>
+      <ul><li>생산 실적 CSV/엑셀: 일자·라인·품목·계획수량·실적수량</li><li>불량 내역: 유형·수량</li><li>비가동 기록: 시간·사유(자유서술)</li><li>작업일보 메모</li></ul>
+      <p style="margin:8px 0 0;font-size:12px;color:var(--warn)">※ 고객명·단가 등 민감정보는 제외/익명화</p></div>
+    <div class="card"><h3>AI 적용 방식</h3>
+      <p style="margin:0">정형 데이터 집계·편차 분석 + 비가동/불량 사유 텍스트 요약·분류 + 이상 패턴 설명 생성(Claude). 별도 예측 모델 없이 <b>임계값 규칙 + LLM 해석</b> 조합.</p></div>
+    <div class="card"><h3>출력물</h3>
+      <p style="margin:0">라인별 달성률, 이상 징후 TOP3, 원인 후보와 근거 데이터, 권고 조치가 담긴 HTML 리포트.</p></div>
+    <div class="card"><h3>사람 개입</h3>
+      <p style="margin:0">원인 분류와 권고 조치는 담당자가 검토·확정 후 배포. 근거가 부족한 항목은 <span class="chip c-w">AI 추정 불가</span>로 표시.</p></div>
+  </div>
+</section>
+
+<section id="kpis">
+  <h2>성공 지표 (KPI)</h2>
+  <div class="grid g2">
+    <div class="card"><h3>일일 보고서 작성 시간 (분)</h3>
+      <div class="cmp" id="b1"></div></div>
+    <div class="card"><h3>KPI 상세</h3>
+      <table>
+        <tr><th>지표</th><th>현재</th><th>목표</th><th>측정</th></tr>
+        <tr><td>보고서 작성 시간</td><td>약 2시간/일 <span class="assume">(가정)</span></td><td><b>20분 이하</b></td><td>4주간 시작~완료 시간 기록</td></tr>
+        <tr><td>원인 분류 정확도</td><td>담당자별 편차 (사전 측정 필요)</td><td><b>85% 이상 일치</b></td><td>샘플 50건 대조</td></tr>
+        <tr><td>이상 징후 인지 시점</td><td>익일 오전</td><td><b>당일 오전 (D+0)</b></td><td>리포트 생성 vs 기존 인지 시각</td></tr>
+      </table></div>
+  </div>
+</section>
+
+<section id="schedule">
+  <h2>추진 일정 (4주)</h2>
+  <div class="tl">
+    <div class="card ph"><span class="chip c-ok" style="background:var(--pri2);color:var(--pri)">1~2주</span>
+      <h3 style="margin-top:8px;color:var(--ink)">데이터 수집·전처리, 프롬프트/모델 설계</h3>
+      <ul><li>정제 샘플 데이터셋</li><li>프롬프트 v1</li><li>HTML 리포트 템플릿</li></ul></div>
+    <div class="card ph b"><span class="chip c-ok">3~4주</span>
+      <h3 style="margin-top:8px;color:var(--ink)">결과 검증, 현업 테스트 및 성과 측정</h3>
+      <ul><li>검증 결과(정확도·시간 비교)</li><li>현업 피드백</li><li>최종 결과 보고</li></ul></div>
+  </div>
+  <p style="font-size:12px;color:var(--mut)">※ 실행 기한은 실제 일정·업무에 따라 수정.</p>
+</section>
+
+<section id="value">
+  <h2>3. Claude 활용 및 비즈니스 가치</h2>
+  <div class="grid g2">
+    <div class="card"><h3>활용 시나리오</h3>
+      <p style="margin:0">전일 생산 데이터 업로드 → Claude가 달성률·불량·비가동 분석 → 비가동 원인 파레토, 라인별 달성률 카드, 이상 징후 목록이 담긴 일일 생산 리포트(HTML) 생성 → 아침 회의에서 바로 공유.</p></div>
+    <div class="card"><h3>프롬프트 설계</h3>
+      <table>
+        <tr><td><b>역할</b></td><td>생산운영 분석가</td></tr>
+        <tr><td><b>맥락</b></td><td>라인별 전일 실적/불량/비가동 데이터(첨부)</td></tr>
+        <tr><td><b>과업</b></td><td>달성률 계산, 미달 원인 후보 분류, 이상 징후 TOP3 도출</td></tr>
+        <tr><td><b>제약</b></td><td>데이터에 없는 내용 추정 금지, 모든 원인에 근거 행 명시</td></tr>
+        <tr><td><b>출력</b></td><td>단일 HTML(인라인 CSS)</td></tr>
+      </table></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>연간 기대 효과 (만원) <span class="assume">(가정)</span></h3>
+      <div class="cmp" id="b2"></div>
+      <p style="margin:12px 0 0;font-size:13px">합계 <b class="up">약 4,790만원/년</b> + 정성 효과: 인지 시점 익일→당일, 리드타임 2시간→20분</p>
+      <table style="margin-top:10px">
+        <tr><th>구분</th><th>산정 근거</th></tr>
+        <tr><td>시간 절감<br><b>1,190만</b></td><td>월 40h → 약 7h(20분×20일), 월 33h 절감 × 12개월 × 시간당 3만원</td></tr>
+        <tr><td>비용 절감<br><b>3,600만</b></td><td>월 비가동 30h의 10%(3h) 감축 × 시간당 손실 100만원 × 12개월</td></tr>
+      </table></div>
+    <div class="card"><h3>효과 시뮬레이터 <span class="assume">(가정값 조정)</span></h3>
+      <label>월 절감 시간: <b id="v1">33</b> 시간</label><input id="s1" type="range" min="0" max="60" value="33">
+      <label>시간당 인건비: <b id="v2">3</b> 만원</label><input id="s2" type="range" min="1" max="10" step="0.5" value="3">
+      <label>월 비가동 감축 시간: <b id="v3">3</b> 시간</label><input id="s3" type="range" min="0" max="15" step="0.5" value="3">
+      <label>시간당 손실액: <b id="v4">100</b> 만원</label><input id="s4" type="range" min="10" max="300" step="10" value="100">
+      <div style="margin-top:14px">연간 합계</div>
+      <div class="big" id="tot">4,788만원</div>
+      <div style="font-size:12px;color:var(--mut)" id="brk"></div></div>
+  </div>
+</section>
+
+<section id="output">
+  <h2>HTML 산출물 구성 (미리보기)</h2>
+  <div class="flow" style="margin-bottom:14px">
+    <div class="step"><b>1</b>요약 3줄</div><div class="step"><b>2</b>라인별 달성률 카드</div><div class="step"><b>3</b>비가동·불량 파레토 차트</div><div class="step"><b>4</b>상세 표</div><div class="step hu"><b>5</b>권고 조치·담당자 확인란</div>
+  </div>
+  <div class="card mock">
+    <div style="font-size:12px;color:var(--warn);font-weight:700">⚠ 아래는 구성을 보여주는 예시용 가상 데이터이며 실제 실적이 아닙니다.</div>
+    <div class="mc">
+      <div>A라인<b class="up">98%</b>정상</div><div>B라인<b style="color:var(--warn)">91%</b>주의</div><div>C라인<b class="dn">82%</b>미달</div>
+    </div>
+    <div class="grid g2">
+      <div><h3>비가동 원인 파레토 (예시)</h3><div class="cmp" id="b3"></div></div>
+      <div><h3>이상 징후 (예시)</h3>
+        <table>
+          <tr><td>1</td><td>C라인 금형 교체 지연</td><td><span class="chip c-bad">근거: 비가동 3건</span></td></tr>
+          <tr><td>2</td><td>B라인 외관 불량 증가</td><td><span class="chip c-w">근거: 불량 2일 연속</span></td></tr>
+          <tr><td>3</td><td>A라인 원인 불명 정지</td><td><span class="chip c-w">AI 추정 불가</span></td></tr>
+        </table>
+        <p style="margin:10px 0 0;font-size:13px">☐ 담당자 확인 &nbsp; ☐ 권고 조치 확정 &nbsp; ☐ 배포</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="expand">
+  <h2>확산 계획</h2>
+  <div class="road">
+    <div class="on"><b>2~3개 라인 4주 파일럿</b><br>현재 단계</div>
+    <div><b>전 라인 확대</b><br>주간·월간 리포트로 확장</div>
+    <div><b>자산화·팀 공유</b><br>프롬프트·HTML 템플릿</div>
+    <div><b>정기 운영 편입</b><br>MES 연동 검토</div>
+  </div>
+</section>
+
+<footer>출처: AI_PoC_기획서_작성본.docx · 금액·시간 수치는 기획서상 가정값 · 이 파일은 외부 연결 없이 단독으로 열립니다.</footer>
+</div>
+
+<script>
+function bars(id,items,max,unit){
+  var el=document.getElementById(id);
+  el.innerHTML=items.map(function(d){return '<div class="row"><span>'+d[0]+'</span><div class="bar"><i style="background:'+d[2]+'" data-w="'+(d[1]/max*100)+'"></i></div><b>'+d[1].toLocaleString()+unit+'</b></div>'}).join('');
+}
+bars('b1',[['현재',120,'var(--bad)'],['목표',20,'var(--ok)']],120,'분');
+bars('b2',[['시간 절감',1190,'var(--pri)'],['비용 절감',3600,'var(--ok)']],3600,'');
+bars('b3',[['금형 교체',45,'var(--bad)'],['자재 대기',30,'var(--warn)'],['설비 고장',15,'var(--pri)'],['기타',10,'var(--mut)']],45,'%');
+requestAnimationFrame(function(){setTimeout(function(){
+  document.querySelectorAll('.bar i').forEach(function(i){i.style.width=i.dataset.w+'%'})},50)});
+function calc(){
+  var a=+s1.value,b=+s2.value,c=+s3.value,d=+s4.value;
+  v1.textContent=a;v2.textContent=b;v3.textContent=c;v4.textContent=d;
+  var t=a*12*b,u=c*12*d;
+  tot.textContent=Math.round(t+u).toLocaleString()+'만원';
+  brk.textContent='시간 절감 '+Math.round(t).toLocaleString()+'만 + 비용 절감 '+Math.round(u).toLocaleString()+'만';
+}
+['s1','s2','s3','s4'].forEach(function(i){document.getElementById(i).addEventListener('input',calc)});
+calc();
+</script>
+</body>
+</html>
